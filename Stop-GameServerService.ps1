@@ -2,7 +2,7 @@
  It causes major frame drops
  Author: Jericho Jones
  Date: 06/24/2023
- Updated: 07/15/2023
+ Updated: 11/26/2023
  Added...
 	Minimize script window
 	Press ScrollLock to close (Disabled as it causes the script to crash)
