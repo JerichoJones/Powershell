@@ -5,7 +5,7 @@
  Updated: 07/15/2023
  Added...
 	Minimize script window
-	Press ScrollLock to close
+	Press ScrollLock to close (Disabled as it causes the script to crash)
 #>
 
 # Check if running with elevated privileges
@@ -100,7 +100,7 @@ function Stop-GamingServicesService {
 }
 
 # Start the keyboard hook
-[KeyboardHook]::StartHook()
+#[KeyboardHook]::StartHook()
 
 # Loop to continuously monitor and stop Gaming Services service
 while ($true) {
