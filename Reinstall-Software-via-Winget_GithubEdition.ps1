@@ -170,7 +170,7 @@ function Enable-GameMode {
 ### This is where the work is done
 Start-Transcript -Path $Env:TEMP\$($env:COMPUTERNAME)_StoreUpdate.log
 $NewComputername = "My-PC"
-Clear
+Clear-Host
 
 # Check if running with elevated privileges
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -213,7 +213,7 @@ winget source update | Out-Null
 Write-Host "Winget app repository has been updated.`n" -ForegroundColor Green
 
 Write-Host "Step 5: Run Chris Titus script..."
-iwr -useb https://christitus.com/win | iex
+Invoke-WebRequest -useb https://christitus.com/win | Invoke-Expression
 
 Write-Host "Step 6: Install Apps..."
 # Application Ids
