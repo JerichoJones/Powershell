@@ -6,7 +6,7 @@ This repository contains a collection of PowerShell scripts developed by Jericho
 ## Scripts
 
 ### Create-Shortcut2WinUtil.ps1
-- **Description**: Creates a shortcut in the Start Menu to run Chris Titus WinUtil from GitHub with administrator privileges.
+- **Description**: This script generates a shortcut (.lnk) file in the user's Start Menu. The shortcut executes a PowerShell command that fetches and runs the Chris Titus WinUtil script from GitHub. The script supports selecting the 'stable' or 'dev' branch. The shortcut requires administrative privileges and uses an icon sourced from the Chris Titus WinUtil repository.
 - **Parameters**:
   - `Branch`: Specifies the branch to use for the Chris Titus WinUtil script (default: 'stable').
   - `WhatIf`: Simulates the creation of the shortcut without making changes.
