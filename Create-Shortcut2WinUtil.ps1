@@ -20,7 +20,7 @@
     File Name      : Create-Shortcut2WinUtil.ps1
     Version        : 1.9.0
     Prerequisites  : PowerShell 5.1 or later
-    Author         : JerichoJones (Updated by [Your Name])
+    Author         : JerichoJones
     Requirements   : Write access to the user's personal Start Menu folder
     Security Note  : This script fetches a script from an internet source. Ensure the source is trusted before execution.
                      The shortcut will prompt for admin rights when launched.
