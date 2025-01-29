@@ -5,7 +5,8 @@
 .DESCRIPTION
     This script generates a shortcut (.lnk) file in the user's personal Start Menu. The shortcut executes
     a PowerShell command that fetches and runs the Chris Titus WinUtil script from GitHub with elevated privileges. 
-    The script supports selecting either the 'stable' or 'dev' branch. No admin privileges are needed to create the shortcut.
+    The script supports selecting either the 'stable' or 'dev' branch. No admin privileges are needed to create the shortcut,
+    but the shortcut will prompt for admin rights when launched.
 
 .PARAMETER Branch
     Specifies the branch to use for the Chris Titus WinUtil script:
@@ -17,9 +18,9 @@
 
 .NOTES
     File Name      : Create-Shortcut2WinUtil.ps1
-    Version        : 1.8.0
+    Version        : 1.9.0
     Prerequisites  : PowerShell 5.1 or later
-    Author         : JerichoJones
+    Author         : JerichoJones (Updated by [Your Name])
     Requirements   : Write access to the user's personal Start Menu folder
     Security Note  : This script fetches a script from an internet source. Ensure the source is trusted before execution.
                      The shortcut will prompt for admin rights when launched.
@@ -90,8 +91,8 @@ function Get-CTTLogoIcon {
     return $destinationPath
 }
 
-# Helper function: Create shortcut with admin request
-function Create-ShortcutWithAdmin {
+# Helper function: Create shortcut
+function Create-Shortcut {
     param (
         [string]$TargetPath,
         [string]$Arguments,
@@ -108,13 +109,28 @@ function Create-ShortcutWithAdmin {
         $shortcut.WorkingDirectory = $WorkingDirectory
         $shortcut.Description = "Chris Titus WinUtil Shortcut"
         $shortcut.IconLocation = "$IconPath, 0"
-        
-        # Set the runAsAdministrator flag
-        $shortcut.WindowStyle = 7 # 7 means RunAsAdministrator
         $shortcut.Save()
         Write-Host "Shortcut created at $ShortcutPath" -ForegroundColor Green
     } catch {
         Write-Host "Error creating shortcut at $ShortcutPath" -ForegroundColor Red
+        Write-Host "Exception: $($_.Exception.Message)" -ForegroundColor Yellow
+        throw
+    }
+}
+
+# Helper function: Modify shortcut for admin rights
+function Modify-ShortcutForAdmin {
+    param (
+        [string]$ShortcutPath
+    )
+
+    try {
+        $bytes = [System.IO.File]::ReadAllBytes($ShortcutPath)
+        $bytes[0x15] = $bytes[0x15] -bor 0x20
+        [System.IO.File]::WriteAllBytes($ShortcutPath, $bytes)
+        Write-Host "Shortcut modified for admin rights" -ForegroundColor Green
+    } catch {
+        Write-Host "Error modifying shortcut for admin rights: $ShortcutPath" -ForegroundColor Red
         Write-Host "Exception: $($_.Exception.Message)" -ForegroundColor Yellow
         throw
     }
@@ -142,16 +158,19 @@ $arguments = "-NoProfile -ExecutionPolicy Bypass -Command `"$command`""
 
 if (-not $WhatIf) {
     try {
-        Create-ShortcutWithAdmin -TargetPath "powershell.exe" `
-                                 -Arguments $arguments `
-                                 -WorkingDirectory ([System.Environment]::GetFolderPath('MyDocuments')) `
-                                 -ShortcutPath $shortcutPath `
-                                 -IconPath $iconPath
+        Create-Shortcut -TargetPath "powershell.exe" `
+                        -Arguments $arguments `
+                        -WorkingDirectory ([System.Environment]::GetFolderPath('MyDocuments')) `
+                        -ShortcutPath $shortcutPath `
+                        -IconPath $iconPath
+
+        # Modify the shortcut to request admin rights
+        Modify-ShortcutForAdmin -ShortcutPath $shortcutPath
 
         Write-Host "Chris Titus WinUtil ($Branch branch) shortcut created successfully in your Start Menu. It will request admin rights when launched." -ForegroundColor Green
     } catch {
-        Write-Host "An error occurred while creating the shortcut: $_" -ForegroundColor Red
+        Write-Host "An error occurred while creating or modifying the shortcut: $_" -ForegroundColor Red
     }
 } else {
-    Write-Host "WhatIf: Would create a shortcut for Chris Titus WinUtil ($Branch branch) in your Start Menu, requesting admin rights upon launch." -ForegroundColor Yellow
+    Write-Host "WhatIf: Would create a shortcut for Chris Titus WinUtil ($Branch branch) in your Start Menu, which would request admin rights upon launch." -ForegroundColor Yellow
 }
