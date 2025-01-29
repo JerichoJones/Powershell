@@ -18,7 +18,7 @@
 
 .NOTES
     File Name      : Create-Shortcut2WinUtil.ps1
-    Version        : 1.9.0
+    Version        : 2.0.0
     Prerequisites  : PowerShell 5.1 or later
     Author         : JerichoJones
     Requirements   : Write access to the user's personal Start Menu folder
@@ -92,7 +92,7 @@ function Get-CTTLogoIcon {
 }
 
 # Helper function: Create shortcut
-function Create-Shortcut {
+function New-Shortcut {
     param (
         [string]$TargetPath,
         [string]$Arguments,
@@ -108,7 +108,8 @@ function Create-Shortcut {
         $shortcut.Arguments = $Arguments
         $shortcut.WorkingDirectory = $WorkingDirectory
         $shortcut.Description = "Chris Titus WinUtil Shortcut"
-        $shortcut.IconLocation = "$IconPath, 0"
+        $shortcut.WindowStyle = 7 # Minimized
+        $shortcut.IconLocation = "$IconPath, 0" # Use the first icon in the file
         $shortcut.Save()
         Write-Host "Shortcut created at $ShortcutPath" -ForegroundColor Green
     } catch {
@@ -119,7 +120,7 @@ function Create-Shortcut {
 }
 
 # Helper function: Modify shortcut for admin rights
-function Modify-ShortcutForAdmin {
+function Update-ShortcutForAdmin {
     param (
         [string]$ShortcutPath
     )
@@ -158,14 +159,14 @@ $arguments = "-NoProfile -ExecutionPolicy Bypass -Command `"$command`""
 
 if (-not $WhatIf) {
     try {
-        Create-Shortcut -TargetPath "powershell.exe" `
+        New-Shortcut -TargetPath "powershell.exe" `
                         -Arguments $arguments `
                         -WorkingDirectory ([System.Environment]::GetFolderPath('MyDocuments')) `
                         -ShortcutPath $shortcutPath `
                         -IconPath $iconPath
 
         # Modify the shortcut to request admin rights
-        Modify-ShortcutForAdmin -ShortcutPath $shortcutPath
+        Update-ShortcutForAdmin -ShortcutPath $shortcutPath
 
         Write-Host "Chris Titus WinUtil ($Branch branch) shortcut created successfully in your Start Menu. It will request admin rights when launched." -ForegroundColor Green
     } catch {
