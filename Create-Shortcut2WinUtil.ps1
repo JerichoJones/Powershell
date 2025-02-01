@@ -78,7 +78,7 @@ function Get-CTTLogoIcon {
         $inputPath = Join-Path -Path $graphicsPath -ChildPath "cttlogo.png"
 
         if (!(Test-Path -Path $graphicsPath)) {
-            mkdir $graphicsPath
+            New-Item -ItemType Directory -Path $graphicsPath
         }
 
         if (!(Test-Path -Path $inputPath)) {
