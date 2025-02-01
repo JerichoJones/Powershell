@@ -18,7 +18,7 @@
 
 .NOTES
     File Name      : Create-Shortcut2WinUtil.ps1
-    Version        : 2.2.1
+    Version        : 2.2.2
     Prerequisites  : PowerShell 5.1 or later
     Author         : JerichoJones
     Requirements   : Write access to the user's personal Start Menu folder
@@ -49,7 +49,10 @@
     Simulates shortcut creation for the dev branch without making changes.
 #>
 
+using namespace System
+using namespace System.Environment
 using namespace System.IO
+using namespace System.Drawing
 
 param(
     [Parameter()]
@@ -198,7 +201,7 @@ $command = if ($Branch -eq 'stable') {
     "Invoke-Expression (Invoke-RestMethod 'https://christitus.com/windev')"
 }
 
-$arguments = "-NoProfile -ExecutionPolicy Bypass -Command `"$command`""
+$arguments = "-NoProfile -ExecutionPolicy Bypass -Command `"$command`"" 
 
 if (-not $WhatIf) {
     try {
