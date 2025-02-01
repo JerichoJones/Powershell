@@ -6,16 +6,17 @@ This repository contains a collection of PowerShell scripts developed by Jericho
 ## Scripts
 
 ### Create-Shortcut2WinUtil.ps1
-- **Description**: This script generates a shortcut (.lnk) file in the user's Start Menu. The shortcut executes a PowerShell command that fetches and runs the Chris Titus WinUtil script from GitHub. The script supports selecting the 'stable' or 'dev' branch. The shortcut requires administrative privileges and uses an icon sourced from the Chris Titus WinUtil repository.
+- **Description**: This script generates a shortcut (.lnk) file in the user's Start Menu. The shortcut executes a PowerShell command that fetches and runs the Chris Titus WinUtil script from GitHub with elevated privileges. The script supports selecting either the 'stable' or 'dev' branch.
 - **Parameters**:
   - `Branch`: Specifies the branch to use for the Chris Titus WinUtil script (default: 'stable').
   - `WhatIf`: Simulates the creation of the shortcut without making changes.
+  - `PngUrl`: Specifies the URL of the PNG image to use as the icon.
 - **Examples**:
   - `.\Create-Shortcut2WinUtil.ps1` - Creates a shortcut for the stable branch with default settings.
   - `.\Create-Shortcut2WinUtil.ps1 -Branch dev` - Creates a shortcut for the development branch.
-- **Notes**: Requires PowerShell 5.1 or later and administrative privileges. Ensure the source is trusted before execution.
+- **Notes**: Requires PowerShell 5.1 or later and administrative privileges. The script now validates that the PNG image is square and resizes it if necessary to not exceed 256x256 pixels. Ensure the source is trusted before execution.
 - **Link**: [Chris Titus WinUtil](https://github.com/ChrisTitusTech/winutil)
-
+  
 ### Reinstall-Software-via-Winget_GithubEdition.ps1
 - **Description**: Post Windows install script to optimize for gaming and install software. It updates Microsoft Store applications, runs Chris Titus script, installs apps, disables High Performance Event Timer (HPET), modifies CPU and GPU priorities, enables Game Mode, renames the computer, and prompts for a reboot.
 - **Functions**:
