@@ -18,7 +18,7 @@
 
 .NOTES
     File Name      : Create-Shortcut2WinUtil.ps1
-    Version        : 2.1.1
+    Version        : 2.2.1
     Prerequisites  : PowerShell 5.1 or later
     Author         : JerichoJones
     Requirements   : Write access to the user's personal Start Menu folder
@@ -88,10 +88,22 @@ function Get-CTTLogoIcon {
         }
 
         $image = [System.Drawing.Image]::FromFile($inputPath)
+        $maxIconSize = 256
         $width = $image.Width
         $height = $image.Height
 
         Write-Host "[DEBUG] Image dimensions: $width x $height"
+
+        if ($width -ne $height) {
+            throw "The PNG image must be square. Current dimensions are $width x $height."
+        }
+
+        if ($width -gt $maxIconSize -or $height -gt $maxIconSize) {
+            Write-Host "[DEBUG] Resizing image to $maxIconSize x $maxIconSize"
+            $resizedImage = New-Object System.Drawing.Bitmap($image, $maxIconSize, $maxIconSize)
+            $image.Dispose()
+            $image = $resizedImage
+        }
 
         $icon = [System.Drawing.Icon]::FromHandle($image.GetHicon())
         $iconStream = New-Object System.IO.MemoryStream
@@ -102,7 +114,7 @@ function Get-CTTLogoIcon {
         return $outputPath
 
     } catch {
-        Write-Host "[ERROR] Error creating icon: $_" -ForegroundColor Red;
+        Write-Host "[ERROR] Error creating icon: $_" -ForegroundColor Red
         return $null
     } finally {
         if ($icon) {
@@ -165,9 +177,13 @@ function Update-ShortcutForAdmin {
 }
 
 # Retrieve icon
-$iconPath = Get-CTTLogoIcon
-if (-not $iconPath) {
-    Write-Host "Failed to create icon. Exiting..." -ForegroundColor Red
+try {
+    $iconPath = Get-CTTLogoIcon
+    if (-not $iconPath) {
+        throw "Failed to create icon."
+    }
+} catch {
+    Write-Host "[ERROR] $_" -ForegroundColor Red
     exit
 }
 
