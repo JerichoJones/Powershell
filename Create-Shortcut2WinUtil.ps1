@@ -18,7 +18,7 @@
 
 .NOTES
     File Name      : Create-Shortcut2WinUtil.ps1
-    Version        : 2.1.0
+    Version        : 2.1.1
     Prerequisites  : PowerShell 5.1 or later
     Author         : JerichoJones
     Requirements   : Write access to the user's personal Start Menu folder
