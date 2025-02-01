@@ -18,7 +18,7 @@
 
 .NOTES
     File Name      : Create-Shortcut2WinUtil.ps1
-    Version        : 2.0.0
+    Version        : 2.1.0
     Prerequisites  : PowerShell 5.1 or later
     Author         : JerichoJones
     Requirements   : Write access to the user's personal Start Menu folder
@@ -30,6 +30,7 @@
 
 .LINK
     Chris Titus WinUtil: https://github.com/ChrisTitusTech/winutil
+    Jericho Jones Create-Shortcut2WinUtil.ps1: https://github.com/JerichoJones/Powershell/blob/main/Create-Shortcut2WinUtil.ps1
 
 .EXAMPLE
     .\Create-Shortcut2WinUtil.ps1
@@ -65,30 +66,52 @@ function Get-CTTLogoIcon {
     param (
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^[A-Za-z]:\\')]
-        [string]$destinationPath = (Join-Path -Path $env:USERPROFILE -ChildPath "AppData\Local\winutil\cttlogo.ico")
+        [string]$outputPath = (Join-Path -Path $env:USERPROFILE -ChildPath "AppData\Local\winutil\cttlogo.ico")
     )
 
+    Write-Host "[DEBUG] Output path: $outputPath" -ForegroundColor Gray
+
     try {
-        $destinationDir = Split-Path -Path $destinationPath
-        if (-not (Test-Path -Path $destinationDir)) {
-            New-Item -Path $destinationDir -ItemType Directory -Force | Out-Null
+        Add-Type -AssemblyName System.Drawing
+
+        $graphicsPath = Join-Path -Path $env:USERPROFILE -ChildPath "AppData\Local\winutil"
+        $inputPath = Join-Path -Path $graphicsPath -ChildPath "cttlogo.png"
+
+        if (!(Test-Path -Path $graphicsPath)) {
+            mkdir $graphicsPath
         }
+
+        if (!(Test-Path -Path $inputPath)) {
+            $pngPath = Join-Path -Path $env:TEMP -ChildPath "cttlogo.png"
+            Invoke-WebRequest -Uri $PngUrl -OutFile $pngPath
+            Move-Item -Path $pngPath -Destination $inputPath -Force
+        }
+
+        $image = [System.Drawing.Image]::FromFile($inputPath)
+        $width = $image.Width
+        $height = $image.Height
+
+        Write-Host "[DEBUG] Image dimensions: $width x $height"
+
+        $icon = [System.Drawing.Icon]::FromHandle($image.GetHicon())
+        $iconStream = New-Object System.IO.MemoryStream
+        $icon.Save($iconStream)
+        $iconStream.ToArray() | Set-Content -Path $outputPath -Encoding Byte
+        Write-Host "Icon created successfully at: $outputPath"
+
+        return $outputPath
+
     } catch {
-        Write-Host "Invalid destination path: $_" -ForegroundColor Red
+        Write-Host "[ERROR] Error creating icon: $_" -ForegroundColor Red;
         return $null
+    } finally {
+        if ($icon) {
+            $icon.Dispose()
+        }
+        if ($image) {
+            $image.Dispose()
+        }
     }
-
-    $pngFilePath = Join-Path -Path $destinationDir -ChildPath "cttlogo.png"
-
-    try {
-        Invoke-WebRequest -Uri $PngUrl -OutFile $pngFilePath
-        Write-Host "Downloaded cttlogo.png to $pngFilePath" -ForegroundColor Green
-    } catch {
-        Write-Host "Failed to download cttlogo.png: $_" -ForegroundColor Red
-        return $null
-    }
-
-    return $destinationPath
 }
 
 # Helper function: Create shortcut
@@ -102,7 +125,11 @@ function New-Shortcut {
     )
 
     try {
-        $WScriptShell = New-Object -ComObject WScript.Shell
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            throw "Creating shortcuts is not supported in PowerShell Core. Please run this script in Windows PowerShell."
+        } else {
+            $WScriptShell = New-Object -ComObject WScript.Shell
+        }
         $shortcut = $WScriptShell.CreateShortcut($ShortcutPath)
         $shortcut.TargetPath = $TargetPath
         $shortcut.Arguments = $Arguments
