@@ -37,7 +37,7 @@
     
     File Name  : Install-VSCodiumSandbox.ps1
     Author     : Jericho Jones
-    Version    : 4.1
+    Version    : 4.2
     Created    : 2025-01-27
     Last Update: 2025-02-07
 
@@ -117,7 +117,7 @@ if ($sandboxFeatureState -ne "Enabled") {
                 exit
             } catch {
                 Write-Error "Failed to enable Windows Sandbox. Error: $($_.Exception.Message)"
-                Pause "Press any key to exit..."
+                Pause
                 Exit 1
             }
         }
@@ -129,18 +129,18 @@ if ($sandboxFeatureState -ne "Enabled") {
                 Exit 0
             } catch {
                 Write-Error "Failed to enable Windows Sandbox. Error: $($_.Exception.Message)"
-                Pause "Press any key to exit..."
+                Pause
                 Exit 1
             }
         }
         "3" {
             Write-Host "Installation of Windows Sandbox cancelled." -ForegroundColor Yellow
-            Pause "Press any key to exit..."
+            Pause
             Exit 2
         }
         default {
             Write-Host "Invalid option. Cancelling installation of Windows Sandbox." -ForegroundColor Red
-            Pause "Press any key to exit..."
+            Pause
             Exit 1
         }
     }
@@ -156,7 +156,7 @@ if (-not (Test-Path $hostTempDir)) {
         Write-Host "Created host temp directory: $hostTempDir" -ForegroundColor Green
     } catch {
         Write-Error "Failed to create host temp directory. Error: $($_.Exception.Message)"
-        Pause "Press any key to exit..."
+        Pause
         Exit 1
     }
 }
@@ -168,7 +168,7 @@ try {
     $releaseInfo = $releaseInfo.Content | ConvertFrom-Json
 } catch {
     Write-Error "Failed to retrieve the latest release information from GitHub. Error: $($_.Exception.Message)"
-    Pause "Press any key to exit..."
+    Pause
     Exit 1
 } finally {
     # Reset the progress preference
@@ -180,14 +180,14 @@ $vscodiumUrl = $releaseInfo.assets | Where-Object { $_.browser_download_url -lik
 
 if (-not $vscodiumUrl) {
     Write-Error "Could not find the VSCodium Windows x64 installer asset in the latest release."
-    Pause "Press any key to exit..."
+    Pause
     Exit 1
 }
 
 # Check if multiple URLs are found and error out
 if ($vscodiumUrl -is [array] -and $vscodiumUrl.Count -gt 1) {
     Write-Error "Multiple installer assets found. Unable to determine the correct one."
-    Pause "Press any key to exit..."
+    Pause
     Exit 1
 }
 
@@ -201,7 +201,7 @@ try {
     Write-Host "VSCodium installer download completed." -ForegroundColor Green
 } catch {
     Write-Error "Failed to download VSCodium installer. Error: $($_.Exception.Message)"
-    Pause "Press any key to exit..."
+    Pause
     Exit 1
 } finally {
     # Reset the progress preference
@@ -211,7 +211,7 @@ try {
 # Check if the file was downloaded successfully
 if (-not (Test-Path $vscodiumInstallerPath)) {
     Write-Error "VSCodium installer was not downloaded successfully."
-    Pause "Press any key to exit..."
+    Pause
     Exit 1
 }
 
@@ -293,7 +293,7 @@ try {
     Write-Host "Sandbox configuration file created." -ForegroundColor Green
 } catch {
     Write-Error "Failed to create Sandbox configuration file. Error: $($_.Exception.Message)"
-    Pause "Press any key to exit..."
+    Pause
     Exit 1
 }
 
@@ -309,4 +309,4 @@ try {
 Write-Host "VSCodium installer has been placed in host's C:\Temp" -ForegroundColor Green
 Write-Host "Windows Sandbox launched with C: and E: drive mappings." -ForegroundColor Green
 Write-Host "VSCodium Installation logs will be at C:\VSCodium_Install.log in the sandbox." -ForegroundColor Green
-Pause "Press any key to exit..."
+Pause
