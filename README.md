@@ -35,6 +35,7 @@ This repository contains a collection of PowerShell scripts developed by Jericho
 
 ### Install-VSCodiumSandbox.ps1
 - **Description**: Downloads and installs VSCodium in a Windows Sandbox environment with host drive mappings.
+- **Parameters**: None
 - **Actions**:
   1. Checks if the operating system is supported (Windows 10/11 Pro or Enterprise).
   2. Re-runs the script as Administrator if not already elevated.
@@ -45,6 +46,7 @@ This repository contains a collection of PowerShell scripts developed by Jericho
      - Maps host C: and E: drives as read-only.
      - Automatically installs VSCodium silently on sandbox startup.
   7. Launches the configured Windows Sandbox instance.
+- **Notes**: Requires PowerShell 5.1 or later and administrative privileges. Ensure Windows Sandbox is enabled in Windows Features.
  
 ## Author
 Jericho Jones
