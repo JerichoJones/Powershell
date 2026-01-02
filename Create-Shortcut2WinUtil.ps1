@@ -66,6 +66,19 @@ function Get-CTTLogoIcon {
 
     try {
         Add-Type -AssemblyName System.Drawing
+        if (-not ("Win32.Icon" -as [type])) {
+            Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+namespace Win32 {
+    public static class Icon {
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool DestroyIcon(IntPtr handle);
+    }
+}
+"@
+        }
 
         $graphicsPath = Join-Path -Path $env:USERPROFILE -ChildPath "AppData\Local\winutil"
         $inputPath = Join-Path -Path $graphicsPath -ChildPath "cttlogo.png"
@@ -117,6 +130,7 @@ function Get-CTTLogoIcon {
             $icon = [System.Drawing.Icon]::FromHandle($image.GetHicon())
             Write-Host "PNG resizing not required" -ForeGroundColor Green
         }
+        $iconHandle = $icon.Handle
         $iconStream = New-Object System.IO.MemoryStream
         Write-Host "Creating icon at $outputPath" -ForeGroundColor Cyan
         $icon.Save($iconStream)
@@ -135,6 +149,9 @@ function Get-CTTLogoIcon {
             Write-Host "Disposing of icon in memory" -ForeGroundColor Cyan
             $icon.Dispose()
             Write-Host "Icon disposed" -ForeGroundColor Green
+        }
+        if ($iconHandle -and ("Win32.Icon" -as [type])) {
+            [Win32.Icon]::DestroyIcon($iconHandle) | Out-Null
         }
         if ($image) {
             Write-Host "Disposing of PNG image in memory" -ForeGroundColor Cyan
