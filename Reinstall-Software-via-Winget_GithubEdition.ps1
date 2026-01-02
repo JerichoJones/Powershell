@@ -22,26 +22,49 @@ function Install-WingetApp {
         [string]$applicationId
     )
 
+    function Convert-WingetTableLine {
+        param (
+            [Parameter(Mandatory=$true)]
+            [string]$line,
+            [switch]$HasMatchColumn
+        )
+
+        $columns = $line -split '\s{2,}' | Where-Object { $_ -ne '' }
+        $result = [ordered]@{
+            Name = $null
+            Id = $null
+            Version = $null
+            Source = $null
+        }
+
+        if ($HasMatchColumn) {
+            $result.Match = $null
+        }
+
+        if ($columns.Count -ge 1) { $result.Name = $columns[0] }
+        if ($columns.Count -ge 2) { $result.Id = $columns[1] }
+        if ($columns.Count -ge 3) { $result.Version = $columns[2] }
+        if ($HasMatchColumn) {
+            if ($columns.Count -ge 4) { $result.Match = $columns[3] }
+            if ($columns.Count -ge 5) { $result.Source = $columns[4] }
+        } else {
+            if ($columns.Count -ge 4) { $result.Source = $columns[3] }
+        }
+
+        return [PSCustomObject]$result
+    }
+
     # Search for the application with winget using the Id field
     $searchResult = winget search --id $applicationId
 
     # Check if the application is found
     if ($searchResult -like "*$applicationId*") {
         # Extract the application lines, ignoring header lines
-        $appLines = $searchResult -split "`n" | Where-Object { $_ -match $applicationId -and $_ -notmatch "^Name\s+Id" }
+        $appLines = $searchResult -split "`n" | Where-Object { $_ -match $applicationId -and $_ -notmatch "^Name\s+Id" -and $_ -notmatch '^\s*-+\s*$' }
         $appList = @()
 
         foreach ($appLine in $appLines) {
-            ($appLine -match '^(?<name>\S+)\s+(?<id>\S+)\s+(?<version>\S+)?\s+(?<match>\S+)?\s+(?<source>\S+)?$') | Out-Null
-            $matches = $Matches
-
-            $appList += [PSCustomObject]@{
-                Name = $matches['name']
-                Id = $matches['id']
-                Version = $matches['version']
-                Match = $matches['match']
-                Source = $matches['source']
-            }
+            $appList += Convert-WingetTableLine -line $appLine -HasMatchColumn
         }
 
         # Remove duplicates based on the application ID
@@ -49,15 +72,26 @@ function Install-WingetApp {
 
         # Check if there is more than one unique application found
         if ($uniqueAppList.Count -gt 1) {
-            # Display the search results in a GUI and let the user choose the application
-            $selectedApp = $uniqueAppList | Out-GridView -Title "Select the application to install" -OutputMode Single
+            if (Get-Command Out-GridView -ErrorAction SilentlyContinue) {
+                # Display the search results in a GUI and let the user choose the application
+                $selectedApp = $uniqueAppList | Out-GridView -Title "Select the application to install" -OutputMode Single
+            } else {
+                Write-Host "Multiple matches found. Select the application to install:" -ForegroundColor Yellow
+                for ($i = 0; $i -lt $uniqueAppList.Count; $i++) {
+                    Write-Host ("[{0}] {1} ({2})" -f $i, $uniqueAppList[$i].Name, $uniqueAppList[$i].Id)
+                }
+                $selection = Read-Host "Enter the number of the application to install"
+                if ($selection -match '^\d+$' -and [int]$selection -lt $uniqueAppList.Count) {
+                    $selectedApp = $uniqueAppList[[int]$selection]
+                }
+            }
         } else {
             $selectedApp = $uniqueAppList[0]
         }
 
         if ($selectedApp) {
             # Install the selected application using winget
-            $installResult = winget install --id $selectedApp.Id --silent --scope=machine
+            $installResult = winget install --id $selectedApp.Id --silent --scope=machine --accept-source-agreements --accept-package-agreements
 
             # Filter out lines without any words
             $installLines = $installResult -split "`n" | Where-Object { $_ -match '\w' }
@@ -67,7 +101,7 @@ function Install-WingetApp {
 
             # Check if the installation was successful
             #$installedApp = winget list --id $selectedApp.Id 2> $null
-            $installedApp = winget list
+            $installedApp = winget list --id $selectedApp.Id
 
             # Filter out header lines and lines with only '-' characters
             $installedAppLines = $installedApp -split "`n" | Where-Object { $_ -notmatch "^Name\s+Id\s+Version\s+Source" -and $_ -notmatch '^\s*-\s*$' }
@@ -75,15 +109,7 @@ function Install-WingetApp {
             # Create the PSCustomObject for installed apps
             $installedAppList = @()
             foreach ($installedAppLine in $installedAppLines) {
-                ($installedAppLine -match '^(?<name>\S+)\s+(?<id>\S+)\s+(?<version>\S+)?\s+(?<source>\S+)?$') | Out-Null
-                $matches = $Matches
-
-                $installedAppList += [PSCustomObject]@{
-                    Name = $matches['name']
-                    Id = $matches['id']
-                    Version = $matches['version']
-                    Source = $matches['source']
-                }
+                $installedAppList += Convert-WingetTableLine -line $installedAppLine
             }
 
             # Check if the installed app's ID matches the selected app's ID
@@ -169,7 +195,8 @@ function Enable-GameMode {
 
 ### This is where the work is done
 Start-Transcript -Path $Env:TEMP\$($env:COMPUTERNAME)_StoreUpdate.log
-$NewComputername = "My-PC"
+$currentComputerName = $env:COMPUTERNAME
+$NewComputername = Read-Host "Enter new computer name (leave blank to keep $currentComputerName)"
 Clear-Host
 
 # Check if running with elevated privileges
@@ -343,7 +370,11 @@ Enable-GameMode
 # https://www.youtube.com/watch?v=MUZ1jpnr71w
 
 Write-Host "Step 8: Rename Computer..."
-Rename-Computer -NewName $NewComputername
+if ([string]::IsNullOrWhiteSpace($NewComputername) -or $NewComputername -eq $currentComputerName) {
+    Write-Host "Computer name unchanged. Skipping rename." -ForegroundColor Yellow
+} else {
+    Rename-Computer -NewName $NewComputername
+}
 
 Write-Host "Step 9: Reboot Computer for settings to take affect"
 Stop-Transcript
