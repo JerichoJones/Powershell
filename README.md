@@ -33,7 +33,7 @@ This repository contains a collection of PowerShell scripts developed by Jericho
 - **Notes**: Requires administrative privileges. The script minimizes the console window and continuously monitors and stops the Gaming Services service.
 - **Updated**: 11/26/2023 - Added minimize script window and updated script termination method.
 
-### Install-VSCodiumSandbox.ps1
+### Setup-SandboxForVSCodium.ps1
 - **Description**: Downloads and installs VSCodium in a Windows Sandbox environment with host drive mappings.
 - **Parameters**: None
 - **Actions**:
